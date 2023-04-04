@@ -9,6 +9,11 @@ import addClass from '../utils/addClass';
 import remove from '../utils/remove';
 import appendNext from '../utils/appendNext';
 import stripHtml from '../utils/stripHtml';
+import Graph from 'graphology';
+import Sigma from 'sigma';
+import circular from 'graphology-layout/circular';
+import rotation from 'graphology-layout/rotation';
+import forceAtlas2 from 'graphology-layout-forceatlas2';
 
 /**
  * MainWidget
@@ -47,6 +52,10 @@ export const MainWidget = function (options) {
       detailsContainer: null
     },
     messages: {
+      container: null,
+      detailsContainer: null
+    },
+    missions: {
       container: null,
       detailsContainer: null
     },
@@ -222,27 +231,28 @@ export const MainWidget = function (options) {
   };
 
   this.layout = function () {
-    var _this = this;
-    var wrapper = document.createElement('div');
-    var innerWrapper = document.createElement('div');
+    const _this = this;
+    const wrapper = document.createElement('div');
+    const innerWrapper = document.createElement('div');
 
-    var navigationContainer = document.createElement('div');
-    var navigationItems = document.createElement('div');
+    const navigationContainer = document.createElement('div');
+    const navigationItems = document.createElement('div');
 
-    var mainSectionContainer = document.createElement('div');
+    const mainSectionContainer = document.createElement('div');
 
-    var preLoaderContainer = document.createElement('div');
-    var preLoaderContent = document.createElement('div');
-    var preLoaderBar1 = document.createElement('div');
-    var preLoaderBar2 = document.createElement('div');
-    var preLoaderBar3 = document.createElement('div');
+    const preLoaderContainer = document.createElement('div');
+    const preLoaderContent = document.createElement('div');
+    const preLoaderBar1 = document.createElement('div');
+    const preLoaderBar2 = document.createElement('div');
+    const preLoaderBar3 = document.createElement('div');
 
-    var sectionLB = _this.leaderboardAreaLayout();
-    var sectionACH = _this.achievementsAreaLayout();
-    var sectionRewards = _this.rewardsAreaLayout();
-    var sectionInbox = _this.inboxAreaLayout();
+    const sectionLB = _this.leaderboardAreaLayout();
+    const sectionACH = _this.achievementsAreaLayout();
+    const sectionRewards = _this.rewardsAreaLayout();
+    const sectionInbox = _this.inboxAreaLayout();
+    const sectionMissions = _this.missionsAreaLayout();
 
-    var navigationItemList = [];
+    const navigationItemList = [];
     mapObject(_this.settings.lbWidget.settings.navigation, function (val, key) {
       navigationItemList.push({
         key: key,
@@ -277,6 +287,7 @@ export const MainWidget = function (options) {
     mainSectionContainer.appendChild(sectionACH);
     mainSectionContainer.appendChild(sectionRewards);
     mainSectionContainer.appendChild(sectionInbox);
+    mainSectionContainer.appendChild(sectionMissions);
     mainSectionContainer.appendChild(preLoaderContainer);
 
     innerWrapper.appendChild(navigationContainer);
@@ -806,6 +817,112 @@ export const MainWidget = function (options) {
     sectionInbox.appendChild(sectionInboxDetailsContainer);
 
     return sectionInbox;
+  };
+
+  this.missionsAreaLayout = function () {
+    const _this = this;
+    const sectionMissions = document.createElement('div');
+
+    const sectionMissionsHeader = document.createElement('div');
+    const sectionMissionsHeaderLabel = document.createElement('div');
+    const sectionMissionsHeaderDate = document.createElement('div');
+    const sectionMissionsHeaderClose = document.createElement('div');
+
+    const sectionMissionsDetails = document.createElement('div');
+    const sectionMissionsDetailsInfo = document.createElement('div');
+    const sectionMissionsDetailsInfoIcon = document.createElement('div');
+    const sectionMissionsDetailsContentContainer = document.createElement('div');
+    const sectionMissionsDetailsContentContainerLabel = document.createElement('div');
+    const sectionMissionsDetailsContentContainerDate = document.createElement('div');
+
+    const sectionMissionsList = document.createElement('div');
+    const sectionMissionsListBody = document.createElement('div');
+    const sectionMissionsListBodyResults = document.createElement('div');
+
+    const sectionMissionsFooter = document.createElement('div');
+    const sectionMissionsFooterContent = document.createElement('div');
+
+    const sectionMissionsDetailsContainer = document.createElement('div');
+    const sectionMissionsDetailsHeader = document.createElement('div');
+    const sectionMissionsDetailsHeaderLabel = document.createElement('div');
+    const sectionMissionsDetailsHeaderDate = document.createElement('div');
+    const sectionMissionsDetailsBackBtn = document.createElement('a');
+    const sectionMissionsDetailsBodyContainer = document.createElement('div');
+    const sectionMissionsDetailsBody = document.createElement('div');
+
+    const sectionMissionsGraph = document.createElement('div');
+    const graphImage = document.createElement('div');
+
+    graphImage.setAttribute('class', 'cl-main-widget-missions-graph-image');
+
+    sectionMissionsGraph.setAttribute('id', 'graph-container');
+    sectionMissionsGraph.setAttribute('class', 'cl-main-widget-missions-graph-container');
+
+    sectionMissions.setAttribute('class', _this.settings.lbWidget.settings.navigation.missions.containerClass + ' cl-main-section-item');
+    sectionMissionsHeader.setAttribute('class', 'cl-main-widget-missions-header');
+    sectionMissionsHeaderLabel.setAttribute('class', 'cl-main-widget-missions-header-label');
+    sectionMissionsHeaderDate.setAttribute('class', 'cl-main-widget-missions-header-date');
+    sectionMissionsHeaderClose.setAttribute('class', 'cl-main-widget-missions-header-close');
+
+    sectionMissionsDetails.setAttribute('class', 'cl-main-widget-missions-details');
+    sectionMissionsDetailsInfo.setAttribute('class', 'cl-main-widget-missions-details-info');
+    sectionMissionsDetailsInfoIcon.setAttribute('class', 'cl-main-widget-missions-details-info-icon');
+    sectionMissionsDetailsContentContainer.setAttribute('class', 'cl-main-widget-missions-details-content');
+    sectionMissionsDetailsContentContainerLabel.setAttribute('class', 'cl-main-widget-missions-details-content-label');
+    sectionMissionsDetailsContentContainerDate.setAttribute('class', 'cl-main-widget-missions-details-content-date');
+
+    // Leaderboard result container
+    sectionMissionsList.setAttribute('class', 'cl-main-widget-missions-list');
+    sectionMissionsListBody.setAttribute('class', 'cl-main-widget-missions-list-body');
+    sectionMissionsListBodyResults.setAttribute('class', 'cl-main-widget-missions-list-body-res');
+
+    // footer
+    sectionMissionsFooter.setAttribute('class', 'cl-main-widget-missions-footer');
+    sectionMissionsFooterContent.setAttribute('class', 'cl-main-widget-missions-footer-content');
+
+    // details section
+    sectionMissionsDetailsContainer.setAttribute('class', 'cl-main-widget-missions-details-container');
+    sectionMissionsDetailsHeader.setAttribute('class', 'cl-main-widget-missions-details-header');
+    sectionMissionsDetailsHeaderLabel.setAttribute('class', 'cl-main-widget-missions-details-header-label');
+    sectionMissionsDetailsHeaderDate.setAttribute('class', 'cl-main-widget-missions-details-header-date');
+    sectionMissionsDetailsBackBtn.setAttribute('class', 'cl-main-widget-missions-details-back-btn');
+    sectionMissionsDetailsBodyContainer.setAttribute('class', 'cl-main-widget-missions-details-body-container');
+    sectionMissionsDetailsBody.setAttribute('class', 'cl-main-widget-missions-details-body');
+
+    sectionMissionsHeaderLabel.innerHTML = _this.settings.lbWidget.settings.translation.missions.label;
+    sectionMissionsFooterContent.innerHTML = _this.settings.lbWidget.settings.translation.global.copy;
+
+    sectionMissionsHeader.appendChild(sectionMissionsHeaderLabel);
+    sectionMissionsHeader.appendChild(sectionMissionsHeaderDate);
+    sectionMissionsHeader.appendChild(sectionMissionsHeaderClose);
+
+    sectionMissionsDetailsInfo.appendChild(sectionMissionsDetailsInfoIcon);
+    sectionMissionsDetailsContentContainer.appendChild(sectionMissionsDetailsContentContainerLabel);
+    sectionMissionsDetailsContentContainer.appendChild(sectionMissionsDetailsContentContainerDate);
+    sectionMissionsDetails.appendChild(sectionMissionsDetailsInfo);
+    sectionMissionsDetails.appendChild(sectionMissionsDetailsContentContainer);
+
+    sectionMissionsListBody.appendChild(sectionMissionsListBodyResults);
+    sectionMissionsList.appendChild(sectionMissionsListBody);
+
+    sectionMissionsDetailsHeader.appendChild(sectionMissionsDetailsHeaderLabel);
+    sectionMissionsDetailsHeader.appendChild(sectionMissionsDetailsHeaderDate);
+    sectionMissionsDetailsContainer.appendChild(sectionMissionsDetailsHeader);
+    sectionMissionsDetailsContainer.appendChild(sectionMissionsDetailsBackBtn);
+    sectionMissionsDetailsBodyContainer.appendChild(sectionMissionsDetailsBody);
+    sectionMissionsDetailsBodyContainer.appendChild(graphImage);
+    sectionMissionsDetailsBodyContainer.appendChild(sectionMissionsGraph);
+    sectionMissionsDetailsContainer.appendChild(sectionMissionsDetailsBodyContainer);
+
+    sectionMissionsFooter.appendChild(sectionMissionsFooterContent);
+
+    sectionMissions.appendChild(sectionMissionsHeader);
+    sectionMissions.appendChild(sectionMissionsDetails);
+    sectionMissions.appendChild(sectionMissionsList);
+    sectionMissions.appendChild(sectionMissionsFooter);
+    sectionMissions.appendChild(sectionMissionsDetailsContainer);
+
+    return sectionMissions;
   };
 
   this.leaderboardHeader = function () {
@@ -1392,10 +1509,10 @@ export const MainWidget = function (options) {
       const optInStatus = await this.settings.lbWidget.getCompetitionOptInStatus(
         this.settings.lbWidget.settings.competition.activeCompetition.id
       );
-      // console.warn('mainWidget CompetitionOptInStatus optInStatus:', optInStatus);
-      if (optInStatus.length && optInStatus[0].status === 'Entrant') {
+
+      if (optInStatus.length && optInStatus[0].statusCode >= 15 && optInStatus[0].statusCode <= 35) {
         optIn.parentNode.style.display = 'none';
-      } else if (optInStatus.length && (optInStatus[0].status === 'Entering' || optInStatus[0].status === 'Processing')) {
+      } else if (optInStatus.length && (optInStatus[0].statusCode === 10 || optInStatus[0].statusCode === 0)) {
         optIn.innerHTML = this.settings.lbWidget.settings.translation.tournaments.processing;
         addClass(optIn, 'checking');
         optIn.parentNode.style.display = 'block';
@@ -1492,6 +1609,8 @@ export const MainWidget = function (options) {
       _this.settings.reward.detailsContainer = query(_this.settings.container, '.cl-main-widget-reward-details-container');
       _this.settings.messages.container = query(_this.settings.container, '.' + _this.settings.lbWidget.settings.navigation.inbox.containerClass);
       _this.settings.messages.detailsContainer = query(_this.settings.container, '.cl-main-widget-inbox-details-container');
+      _this.settings.missions.container = query(_this.settings.container, '.' + _this.settings.lbWidget.settings.navigation.missions.containerClass);
+      _this.settings.missions.detailsContainer = query(_this.settings.container, '.cl-main-widget-missions-details-container');
 
       _this.mainNavigationCheck();
       _this.leaderboardHeader();
@@ -1689,11 +1808,95 @@ export const MainWidget = function (options) {
     }, 50);
   };
 
-  this.loadCompetitionList = function (callback) {
+  this.loadCompetitionList = function (
+    callback,
+    readyPageNumber = 1,
+    activePageNumber = 1,
+    finishedPageNumber = 1
+  ) {
     const _this = this;
     const listResContainer = query(_this.settings.tournamentListContainer, '.cl-main-widget-tournaments-list-body-res');
     const listIcon = query(_this.settings.container, '.cl-main-widget-lb-header-list-icon');
     const preLoader = _this.preloader();
+
+    const totalCount = _this.settings.lbWidget.settings.tournaments.totalCount;
+    const readyTotalCount = _this.settings.lbWidget.settings.tournaments.readyTotalCount;
+    const finishedTotalCount = _this.settings.lbWidget.settings.tournaments.finishedTotalCount;
+    const itemsPerPage = 20;
+
+    let paginator = query(listResContainer, '.paginator-active');
+    if (!paginator && totalCount > itemsPerPage) {
+      const pagesCount = Math.ceil(totalCount / itemsPerPage);
+      paginator = document.createElement('div');
+      paginator.setAttribute('class', 'paginator-active');
+      addClass(paginator, 'paginator');
+      addClass(paginator, 'accordion');
+
+      let page = '';
+
+      for (let i = 0; i < pagesCount; i++) {
+        page += '<span class="paginator-item" data-page=' + (i + 1) + '\>' + (i + 1) + '</span>';
+      }
+      paginator.innerHTML = page;
+    }
+
+    let readyPaginator = query(listResContainer, '.paginator-ready');
+    if (!readyPaginator && readyTotalCount > itemsPerPage) {
+      const pagesCount = Math.ceil(readyTotalCount / itemsPerPage);
+      readyPaginator = document.createElement('div');
+      readyPaginator.setAttribute('class', 'paginator-ready');
+      addClass(readyPaginator, 'paginator');
+      addClass(readyPaginator, 'accordion');
+
+      let page = '';
+
+      for (let i = 0; i < pagesCount; i++) {
+        page += '<span class="paginator-item" data-page=' + (i + 1) + '\>' + (i + 1) + '</span>';
+      }
+      readyPaginator.innerHTML = page;
+    }
+
+    let finishedPaginator = query(listResContainer, '.paginator-finished');
+    if (!finishedPaginator && finishedTotalCount > itemsPerPage) {
+      const pagesCount = Math.ceil(finishedTotalCount / itemsPerPage);
+      finishedPaginator = document.createElement('div');
+      finishedPaginator.setAttribute('class', 'paginator-finished');
+      addClass(finishedPaginator, 'paginator');
+      addClass(finishedPaginator, 'accordion');
+
+      let page = '';
+
+      for (let i = 0; i < pagesCount; i++) {
+        page += '<span class="paginator-item" data-page=' + (i + 1) + '\>' + (i + 1) + '</span>';
+      }
+      finishedPaginator.innerHTML = page;
+    }
+
+    if (readyPageNumber > 1) {
+      _this.settings.tournamentsSection.accordionLayout.map(t => {
+        if (t.type === 'readyCompetitions') {
+          t.show = true;
+        } else {
+          t.show = false;
+        }
+      });
+    } else if (finishedPageNumber > 1) {
+      _this.settings.tournamentsSection.accordionLayout.map(t => {
+        if (t.type === 'finishedCompetitions') {
+          t.show = true;
+        } else {
+          t.show = false;
+        }
+      });
+    } else {
+      _this.settings.tournamentsSection.accordionLayout.map(t => {
+        if (t.type === 'activeCompetitions') {
+          t.show = true;
+        } else {
+          t.show = false;
+        }
+      });
+    }
 
     preLoader.show(function () {
       listIcon.style.opacity = '0';
@@ -1720,6 +1923,51 @@ export const MainWidget = function (options) {
 
       listResContainer.innerHTML = '';
       listResContainer.appendChild(accordionObj);
+
+      if (finishedPaginator) {
+        const finishedContainer = query(listResContainer, '.finishedCompetitions');
+        if (finishedContainer) {
+          const paginatorItems = query(finishedPaginator, '.paginator-item');
+          paginatorItems.forEach(item => {
+            removeClass(item, 'active');
+            if (Number(item.dataset.page) === Number(finishedPageNumber)) {
+              addClass(item, 'active');
+            }
+          });
+
+          finishedContainer.appendChild(finishedPaginator);
+        }
+      }
+
+      if (readyPaginator) {
+        const readyContainer = query(listResContainer, '.readyCompetitions');
+        if (readyContainer) {
+          const paginatorItems = query(readyPaginator, '.paginator-item');
+          paginatorItems.forEach(item => {
+            removeClass(item, 'active');
+            if (Number(item.dataset.page) === Number(readyPageNumber)) {
+              addClass(item, 'active');
+            }
+          });
+
+          readyContainer.appendChild(readyPaginator);
+        }
+      }
+
+      if (paginator) {
+        const activeContainer = query(listResContainer, '.activeCompetitions');
+        if (activeContainer) {
+          const paginatorItems = query(paginator, '.paginator-item');
+          paginatorItems.forEach(item => {
+            removeClass(item, 'active');
+            if (Number(item.dataset.page) === Number(activePageNumber)) {
+              addClass(item, 'active');
+            }
+          });
+
+          activeContainer.appendChild(paginator);
+        }
+      }
 
       _this.settings.tournamentListContainer.style.display = 'block';
       setTimeout(function () {
@@ -1832,9 +2080,9 @@ export const MainWidget = function (options) {
     progressionWrapper.appendChild(progressionCont);
 
     if (Array.isArray(ach.constraints) && ach.constraints.includes('optinRequiredForEntrants')) {
-      if (ach.optInStatus && ach.optInStatus === 'Entrant') {
+      if (ach.optInStatus && ach.optInStatus >= 15 && ach.optInStatus <= 35) {
         progressionWrapper.appendChild(leaveButton);
-      } else if (ach.optInStatus && (ach.optInStatus === 'Entering' || ach.optInStatus === 'Processing')) {
+      } else if (!isNaN(ach.optInStatus) && (ach.optInStatus === 10 || ach.optInStatus === 0)) {
         progressionWrapper.appendChild(progressionButton);
       } else {
         progressionWrapper.appendChild(enterButton);
@@ -1908,17 +2156,19 @@ export const MainWidget = function (options) {
 
     const memberAchievementOptInStatus = await _this.settings.lbWidget.getMemberAchievementOptInStatus(data.id);
 
-    // console.warn('memberAchievementOptInStatus:', memberAchievementOptInStatus);
-
     if (optinRequiredForEntrants) {
-      if (memberAchievementOptInStatus.length && memberAchievementOptInStatus[0].status === 'Entrant') {
+      if (
+        memberAchievementOptInStatus.length &&
+        memberAchievementOptInStatus[0].statusCode >= 15 &&
+        memberAchievementOptInStatus[0].statusCode <= 35
+      ) {
         optIn.innerHTML = _this.settings.lbWidget.settings.translation.achievements.leave;
         removeClass(optIn, 'cl-disabled');
         addClass(optIn, 'leave-achievement');
         optIn.parentNode.style.display = 'block';
       } else if (
         memberAchievementOptInStatus.length &&
-        (memberAchievementOptInStatus[0].status === 'Entering' || memberAchievementOptInStatus[0].status === 'Processing')
+        (memberAchievementOptInStatus[0].statusCode === 10 || memberAchievementOptInStatus[0].statusCode === 0)
       ) {
         optIn.innerHTML = _this.settings.lbWidget.settings.translation.achievements.listProgressionBtn;
         removeClass(optIn, 'cl-disabled');
@@ -2044,6 +2294,95 @@ export const MainWidget = function (options) {
     }, 50);
   };
 
+  this.loadMissonDetails = function (mission, callback) {
+    const _this = this;
+    const label = query(_this.settings.missions.detailsContainer, '.cl-main-widget-missions-details-header-label');
+    const body = query(_this.settings.missions.detailsContainer, '.cl-main-widget-missions-details-body');
+
+    if (!mission.data || !mission.data.name) {
+      return;
+    }
+
+    label.innerHTML = mission.data.name;
+    body.innerHTML = mission.data.description;
+
+    _this.settings.missions.detailsContainer.style.display = 'block';
+    setTimeout(function () {
+      addClass(_this.settings.missions.detailsContainer, 'cl-show');
+
+      if (typeof callback === 'function') callback();
+    }, 50);
+
+    const container = document.getElementById('graph-container');
+    container.innerHTML = '';
+
+    const graph = new Graph();
+    mission.graph.nodes.forEach((n) => {
+      let color = '#017dfb';
+      if (n.entityId === mission.data.id) {
+        color = '#ff7400';
+      }
+      graph.addNode(n.entityId, { size: 20, label: n.name, color: color });
+    });
+
+    const MUST_NOT_COLOR = '#e74a39';
+    const SHOULD_COLOR = '#f48f3b';
+    const MUST_COLOR = '#3bb54c';
+
+    mission.graph.graphs[0].edges.forEach(e => {
+      if (e.graphEdgeType !== 'ROOT') {
+        let color = 'black';
+        switch (e.graphEdgeType) {
+          case 'MUST NOT':
+            color = MUST_NOT_COLOR;
+            break;
+          case 'SHOULD':
+            color = SHOULD_COLOR;
+            break;
+          case 'MUST':
+            color = MUST_COLOR;
+            break;
+        }
+        graph.addEdge(
+          e.headEntityId,
+          e.tailEntityId,
+          { weight: 1, type: 'arrow', label: e.graphEdgeType, size: 5, color: color, labelColor: 'red' }
+        );
+      }
+    });
+
+    circular.assign(graph);
+    rotation.assign(graph, 10);
+
+    const settings = {
+      linLogMode: false,
+      outboundAttractionDistribution: false,
+      adjustSizes: false,
+      edgeWeightInfluence: 1,
+      scalingRatio: 10,
+      strongGravityMode: true,
+      gravity: 1,
+      slowDown: 3.7,
+      barnesHutOptimize: false,
+      barnesHutTheta: 0.5
+    };
+
+    forceAtlas2.assign(graph, { settings, iterations: 600 });
+
+    // eslint-disable-next-line
+    const renderer = new Sigma(graph, container, {
+      renderLabels: true,
+      renderEdgeLabels: true,
+      enableEdgeWheelEvents: false,
+      allowInvalidContainer: true,
+      minCameraRatio: null, // 1.3
+      maxCameraRatio: null, // 1.3
+      labelFont: 'Gotham',
+      edgeLabelFont: 'Gotham',
+      edgeLabelWeight: 'bold'
+    });
+  };
+
   this.hideRewardDetails = function (callback) {
     var _this = this;
 
@@ -2061,6 +2400,17 @@ export const MainWidget = function (options) {
     removeClass(_this.settings.messages.detailsContainer, 'cl-show');
     setTimeout(function () {
       _this.settings.messages.detailsContainer.style.display = 'none';
+
+      if (typeof callback === 'function') callback();
+    }, 200);
+  };
+
+  this.hideMissionDetails = function (callback) {
+    const _this = this;
+
+    removeClass(_this.settings.missions.detailsContainer, 'cl-show');
+    setTimeout(function () {
+      _this.settings.missions.detailsContainer.style.display = 'none';
 
       if (typeof callback === 'function') callback();
     }, 200);
@@ -2186,6 +2536,32 @@ export const MainWidget = function (options) {
     return listItem;
   };
 
+  this.missionsItem = function (mission) {
+    const listItem = document.createElement('div');
+    const detailsContainer = document.createElement('div');
+    const detailsWrapper = document.createElement('div');
+    const label = document.createElement('div');
+    const description = document.createElement('div');
+    const content = stripHtml(mission.description);
+
+    listItem.setAttribute('class', 'cl-missions-list-item cl-mission-' + mission.id);
+    detailsContainer.setAttribute('class', 'cl-missions-list-details-cont');
+    detailsWrapper.setAttribute('class', 'cl-missions-list-details-wrap');
+    label.setAttribute('class', 'cl-missions-list-details-label');
+    description.setAttribute('class', 'cl-missions-list-details-description');
+
+    listItem.dataset.id = mission.id;
+    label.innerHTML = (mission.name.length > 36) ? mission.name.substr(0, 36) + '...' : mission.name;
+    description.innerHTML = (content.length > 60) ? content.substr(0, 60) + '...' : content;
+
+    detailsWrapper.appendChild(label);
+    detailsWrapper.appendChild(description);
+    detailsContainer.appendChild(detailsWrapper);
+    listItem.appendChild(detailsContainer);
+
+    return listItem;
+  };
+
   this.tournamentItem = function (tournament) {
     // var _this = this;
     var listItem = document.createElement('div');
@@ -2213,17 +2589,19 @@ export const MainWidget = function (options) {
     return listItem;
   };
 
-  this.rewardsListLayout = function (pageNumber, rewards, availableRewards, expiredRewards) {
+  this.rewardsListLayout = function (pageNumber = 1, claimedPageNumber = 1, rewards, availableRewards, expiredRewards) {
     const _this = this;
     const rewardList = query(_this.settings.section, '.' + _this.settings.lbWidget.settings.navigation.rewards.containerClass + ' .cl-main-widget-reward-list-body-res');
     const totalCount = _this.settings.lbWidget.settings.awards.totalCount;
-    const itemsPerPage = 10;
-    let paginator = query(rewardList, '.paginator');
+    const claimedTotalCount = _this.settings.lbWidget.settings.awards.claimedTotalCount;
+    const itemsPerPage = 20;
+    let paginator = query(rewardList, '.paginator-available');
 
     if (!paginator && totalCount > itemsPerPage) {
       const pagesCount = Math.ceil(totalCount / itemsPerPage);
       paginator = document.createElement('div');
-      paginator.setAttribute('class', 'paginator');
+      paginator.setAttribute('class', 'paginator-available');
+      addClass(paginator, 'paginator');
       addClass(paginator, 'accordion');
 
       let page = '';
@@ -2232,6 +2610,40 @@ export const MainWidget = function (options) {
         page += '<span class="paginator-item" data-page=' + (i + 1) + '\>' + (i + 1) + '</span>';
       }
       paginator.innerHTML = page;
+    }
+
+    let paginatorClaimed = query(rewardList, '.paginator-claimed');
+    if (!paginatorClaimed && claimedTotalCount > itemsPerPage) {
+      const pagesCount = Math.ceil(claimedTotalCount / itemsPerPage);
+      paginatorClaimed = document.createElement('div');
+      paginatorClaimed.setAttribute('class', 'paginator-claimed');
+      addClass(paginatorClaimed, 'paginator');
+      addClass(paginatorClaimed, 'accordion');
+
+      let page = '';
+
+      for (let i = 0; i < pagesCount; i++) {
+        page += '<span class="paginator-item" data-page=' + (i + 1) + '\>' + (i + 1) + '</span>';
+      }
+      paginatorClaimed.innerHTML = page;
+    }
+
+    if (claimedPageNumber > 1) {
+      _this.settings.rewardsSection.accordionLayout.map(t => {
+        if (t.type === 'claimedAwards') {
+          t.show = true;
+        } else {
+          t.show = false;
+        }
+      });
+    } else {
+      _this.settings.rewardsSection.accordionLayout.map(t => {
+        if (t.type === 'availableAwards') {
+          t.show = true;
+        } else {
+          t.show = false;
+        }
+      });
     }
 
     const accordionObj = _this.accordionStyle(_this.settings.rewardsSection.accordionLayout, function (accordionSection, listContainer, topEntryContainer, layout, paginator) {
@@ -2269,20 +2681,23 @@ export const MainWidget = function (options) {
 
       const availableRewards = query(rewardList, '.cl-accordion.availableAwards');
       if (availableRewards) {
-        const availableRewardsList = query(availableRewards, '.cl-accordion-list');
-        if (availableRewardsList) {
-          availableRewardsList.appendChild(paginator);
-        }
+        availableRewards.appendChild(paginator);
       }
     }
 
-    // mapObject(rewardData, function(rew){
-    //   if( query(rewardList, ".cl-reward-" + rew.id) === null ) {
-    //     var listItem = _this.rewardItem(rew);
-    //
-    //     rewardList.appendChild(listItem);
-    //   }
-    // });
+    if (paginatorClaimed) {
+      const paginatorItems = query(paginatorClaimed, '.paginator-item');
+      paginatorItems.forEach(item => {
+        removeClass(item, 'active');
+        if (Number(item.dataset.page) === Number(claimedPageNumber)) {
+          addClass(item, 'active');
+        }
+      });
+      const claimedRewards = query(rewardList, '.cl-accordion.claimedAwards');
+      if (claimedRewards) {
+        claimedRewards.appendChild(paginatorClaimed);
+      }
+    }
   };
 
   this.messagesListLayout = function (pageNumber) {
@@ -2325,16 +2740,60 @@ export const MainWidget = function (options) {
     }
   };
 
-  this.loadAwards = function (pageNumber, callback) {
+  this.missionsListLayout = function (pageNumber) {
     const _this = this;
-    _this.settings.lbWidget.checkForAvailableAwards(pageNumber, function (rewards, availableRewards, expiredRewards) {
-      _this.settings.lbWidget.updateRewardsNavigationCounts();
-      _this.rewardsListLayout(pageNumber, rewards, availableRewards, expiredRewards);
+    const missionsList = query(_this.settings.section, '.' + _this.settings.lbWidget.settings.navigation.missions.containerClass + ' .cl-main-widget-missions-list-body-res');
+    const totalCount = _this.settings.lbWidget.settings.missions.totalCount;
+    const itemsPerPage = 15;
+    let paginator = query(missionsList, '.paginator');
 
-      if (typeof callback === 'function') {
-        callback();
+    if (!paginator && totalCount > itemsPerPage) {
+      const pagesCount = Math.ceil(totalCount / itemsPerPage);
+      paginator = document.createElement('div');
+      paginator.setAttribute('class', 'paginator');
+
+      let page = '';
+
+      for (let i = 0; i < pagesCount; i++) {
+        page += '<span class="paginator-item" data-page=' + (i + 1) + '\>' + (i + 1) + '</span>';
       }
+      paginator.innerHTML = page;
+    }
+
+    missionsList.innerHTML = '';
+
+    mapObject(_this.settings.lbWidget.settings.missions.missions, function (missionsItem, key, count) {
+      const listItem = _this.missionsItem(missionsItem);
+      missionsList.appendChild(listItem);
     });
+
+    if (paginator) {
+      const paginatorItems = query(paginator, '.paginator-item');
+      paginatorItems.forEach(item => {
+        removeClass(item, 'active');
+        if (Number(item.dataset.page) === Number(pageNumber)) {
+          addClass(item, 'active');
+        }
+      });
+
+      missionsList.appendChild(paginator);
+    }
+  };
+
+  this.loadAwards = function (callback, pageNumber, claimedPageNumber) {
+    const _this = this;
+    _this.settings.lbWidget.checkForAvailableAwards(
+      function (rewards, availableRewards, expiredRewards) {
+        _this.settings.lbWidget.updateRewardsNavigationCounts();
+        _this.rewardsListLayout(pageNumber, claimedPageNumber, rewards, availableRewards, expiredRewards);
+
+        if (typeof callback === 'function') {
+          callback();
+        }
+      },
+      pageNumber,
+      claimedPageNumber
+    );
   };
 
   this.loadMessages = function (pageNumber, callback) {
@@ -2343,6 +2802,19 @@ export const MainWidget = function (options) {
     _this.settings.lbWidget.checkForAvailableMessages(pageNumber, function () {
       _this.messagesListLayout(pageNumber);
       _this.settings.lbWidget.updateMessagesNavigationCounts();
+
+      if (typeof callback === 'function') {
+        callback();
+      }
+    });
+  };
+
+  this.loadMissions = function (pageNumber, callback) {
+    const _this = this;
+
+    _this.settings.lbWidget.checkForAvailableMissions(pageNumber, function () {
+      _this.missionsListLayout(pageNumber);
+      _this.settings.lbWidget.updateMissionsNavigationCounts();
 
       if (typeof callback === 'function') {
         callback();
@@ -2419,22 +2891,26 @@ export const MainWidget = function (options) {
                 _this.settings.navigationSwitchInProgress = false;
               });
             } else if (hasClass(target, 'cl-main-widget-navigation-rewards-icon')) {
-              _this.loadAwards(1, function () {
-                const rewardsContainer = query(_this.settings.container, '.cl-main-widget-section-container .' + _this.settings.lbWidget.settings.navigation.rewards.containerClass);
+              _this.loadAwards(
+                function () {
+                  const rewardsContainer = query(_this.settings.container, '.cl-main-widget-section-container .' + _this.settings.lbWidget.settings.navigation.rewards.containerClass);
 
-                rewardsContainer.style.display = 'block';
-                changeInterval = setTimeout(function () {
-                  addClass(rewardsContainer, 'cl-main-active-section');
-                }, 30);
+                  rewardsContainer.style.display = 'block';
+                  changeInterval = setTimeout(function () {
+                    addClass(rewardsContainer, 'cl-main-active-section');
+                  }, 30);
 
-                if (typeof callback === 'function') {
-                  callback();
-                }
+                  if (typeof callback === 'function') {
+                    callback();
+                  }
 
-                preLoader.hide();
+                  preLoader.hide();
 
-                _this.settings.navigationSwitchInProgress = false;
-              });
+                  _this.settings.navigationSwitchInProgress = false;
+                },
+                1,
+                1
+              );
             } else if (hasClass(target, 'cl-main-widget-navigation-inbox-icon')) {
               _this.loadMessages(1, function () {
                 var inboxContainer = query(_this.settings.container, '.cl-main-widget-section-container .' + _this.settings.lbWidget.settings.navigation.inbox.containerClass);
@@ -2442,6 +2918,19 @@ export const MainWidget = function (options) {
                 inboxContainer.style.display = 'block';
                 changeInterval = setTimeout(function () {
                   addClass(inboxContainer, 'cl-main-active-section');
+                }, 30);
+
+                preLoader.hide();
+
+                _this.settings.navigationSwitchInProgress = false;
+              });
+            } else if (hasClass(target, 'cl-main-widget-navigation-missions-icon')) {
+              _this.loadMissions(1, function () {
+                const missionsContainer = query(_this.settings.container, '.cl-main-widget-section-container .' + _this.settings.lbWidget.settings.navigation.missions.containerClass);
+
+                missionsContainer.style.display = 'block';
+                changeInterval = setTimeout(function () {
+                  addClass(missionsContainer, 'cl-main-active-section');
                 }, 30);
 
                 preLoader.hide();
